@@ -4,8 +4,12 @@ LFLAGS		=	-lSDL2 -lSDL2main -lSDL2_image -lSDL2_ttf
 NAME		=	bomberman
 HEADER		=	include/
 SRC_DIR 	=	src
-SRC 		= 	$(SRC_DIR)/main.c
-OBJ 		=	$(SRC_DIR)/main.o
+SRC 		= 	$(SRC_DIR)/main.c \
+				$(SRC_DIR)/map.c
+
+OBJ 		=	$(SRC_DIR)/main.o \
+				$(SRC_DIR)/map.o
+
 RM        	=	rm -f
 
 GREEN_COLOR	=	\033[0;92m
