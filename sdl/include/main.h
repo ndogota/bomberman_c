@@ -10,14 +10,8 @@
 #define TILE_HEIGHT 64
 #define TILE_WIDTH 64
 
-#define FPS 30
+#define FPS 60
 #define FRAME_TARGET_TIME (1000 / FPS)
-
-// global variables
-int game_is_running = false;
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-int last_frame_time = 0;
 
 // player struct
 struct player {
@@ -35,6 +29,17 @@ typedef struct map {
 
     char **data;
 } map;
+
+enum tile_type {
+    wall = '#',
+    ground = ' '
+};
+
+// global variables
+int game_is_running = false;
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+int last_frame_time = 0;
 
 struct texture {
     SDL_Texture* ground;

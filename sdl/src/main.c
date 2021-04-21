@@ -7,6 +7,7 @@ int initialize_window(void) {
         fprintf(stderr, "Error initializing SDL.\n");
         return false;
     }
+
     window = SDL_CreateWindow(
             NULL,
             SDL_WINDOWPOS_CENTERED,
@@ -106,9 +107,9 @@ void render(map map_data) {
             SDL_Rect src = {0, 0, TILE_HEIGHT, TILE_WIDTH};
             SDL_Rect dst = {height * TILE_HEIGHT, width * TILE_WIDTH, TILE_HEIGHT, TILE_WIDTH};
 
-            if(map_data.data[i][j] == '#') {
+            if(map_data.data[i][j] == wall) {
                 SDL_RenderCopy(renderer, texture.wall, &src, &dst);
-            } else if (map_data.data[i][j] == ' ') {
+            } else if (map_data.data[i][j] == ground) {
                 SDL_RenderCopy(renderer, texture.ground, &src, &dst);
             }
         }
@@ -163,6 +164,7 @@ int main() {
         update();
         render(map_data);
     }
+
     destroy_window();
 
     return 0;
