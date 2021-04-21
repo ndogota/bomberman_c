@@ -2,9 +2,13 @@
 #include <stdbool.h>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 640
+
+#define TILE_HEIGHT 64
+#define TILE_WIDTH 64
 
 #define FPS 30
 #define FRAME_TARGET_TIME (1000 / FPS)
@@ -21,7 +25,21 @@ struct player {
     float y;
     float width;
     float height;
+
+    SDL_Texture *sprite;
 } player;
+
+typedef struct map {
+    int tile_height, tile_width;
+    int map_height, map_width;
+
+    char **data;
+} map;
+
+struct texture {
+    SDL_Texture* ground;
+    SDL_Texture* wall;
+} texture;
 
 // setup functions
 void setup(void);
@@ -30,7 +48,9 @@ void setup(void);
 int initialize_window(void);
 void destroy_window(void);
 
+map init_map();
+
 // game loop functions
 void process_input(void);
 void update(void);
-void render(void);
+void render(map map_data);

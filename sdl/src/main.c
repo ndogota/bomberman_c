@@ -62,12 +62,16 @@ void setup(void) {
     player.y = 64;
     player.width = 64;
     player.height = 64;
+    player.sprite = SDL_CreateTextureFromSurface(renderer, IMG_Load("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/player.png"));
+
+    texture.ground = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/ground.bmp"));
+    texture.wall = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/wall.bmp"));
 }
 
 // update
 void update(void) {
     // waste some time / sleep until we reach the frame target time
-    while (!SDL_TICKS_PASSED(SDL_GetTicks(), last_frame_time + FRAME_TARGET_TIME));
+    //while (!SDL_TICKS_PASSED(SDL_GetTicks(), last_frame_time + FRAME_TARGET_TIME));
 
     // sleep the execution until we reach the target frame time in milliseconds
     int time_to_wait = FRAME_TARGET_TIME - (SDL_GetTicks() - last_frame_time);
@@ -92,22 +96,53 @@ void update(void) {
 }
 
 // render
-void render(void) {
+void render(map map_data) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    // draw a rectangle for the ball object
-    SDL_Rect player_rect = {
-            (int)player.x,
-            (int)player.y,
-            (int)player.width,
-            (int)player.height,
+    // drawing map
+    for(int height = 0, i = 0; height < map_data.map_height; height++, i++) {
+        for(int width = 0, j = 0; width < map_data.map_width; width++, j++) {
+            SDL_Rect src = {0, 0, TILE_HEIGHT, TILE_WIDTH};
+            SDL_Rect dst = {height * TILE_HEIGHT, width * TILE_WIDTH, TILE_HEIGHT, TILE_WIDTH};
+
+            if(map_data.data[i][j] == '#') {
+                SDL_RenderCopy(renderer, texture.wall, &src, &dst);
+            } else if (map_data.data[i][j] == ' ') {
+                SDL_RenderCopy(renderer, texture.ground, &src, &dst);
+            }
+        }
+    }
+
+    // draw the player
+    SDL_Rect src = {0, 0, TILE_HEIGHT, TILE_WIDTH};
+    SDL_Rect dst = {player.x, player.y, TILE_HEIGHT, TILE_WIDTH};
+    SDL_RenderCopy(renderer, player.sprite, &src, &dst);
+
+    // render the renderer
+    SDL_RenderPresent(renderer);
+}
+
+/*texture init_texture()
+{
+    texture map_texture = {
+            SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/ground.bmp"))
     };
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &player_rect);
+    return map_texture;
+}*/
 
-    SDL_RenderPresent(renderer);
+map init_map()
+{
+    map map_data = {
+            TILE_HEIGHT,
+            TILE_WIDTH,
+            MAP_HEIGHT,
+            MAP_WIDTH,
+            map_syntax("/home/debian/Documents/Projects/bomberman_c/sdl/map/map_1.txt")
+    };
+
+    return map_data;
 }
 
 // destroy window and renderer
@@ -118,17 +153,17 @@ void destroy_window(void) {
 }
 
 int main() {
-    /*game_is_running = initialize_window();
+    map map_data = init_map();
+    game_is_running = initialize_window();
+
     setup();
 
     while (game_is_running) {
         process_input();
         update();
-        render();
+        render(map_data);
     }
-    destroy_window();*/
-
-    map_syntax("/home/debian/Documents/Projects/bomberman_c/sdl/map/map_1.txt");
+    destroy_window();
 
     return 0;
 }

@@ -63,7 +63,7 @@ int size_map(char *file_name, int *map_height, int *map_width)
     return 0;
 }
 
-int map_syntax(char *file_name)
+char** map_syntax(char *file_name)
 {
     FILE *F;
     int map_height, map_width;
@@ -72,13 +72,13 @@ int map_syntax(char *file_name)
 
     if(!F) {
         printf("The map file : %s doesnt exist.\n", file_name);
-        return -1;
+        return NULL;
     }
 
     for(char c = fgetc(F); c != EOF; c = fgetc(F)) {
         if(c != '#' && c != ' ' && c != '\n') {
             printf("The map file have an invalid syntax : %s\n", file_name);
-            return -1;
+            return NULL;
         }
     }
 
@@ -86,14 +86,10 @@ int map_syntax(char *file_name)
 
     if(map_height != MAP_HEIGHT && map_width != MAP_WIDTH) {
         printf("The map file have an invalid syntax : %s\n", file_name);
-        return -1;
+        return NULL;
     }
 
-    char** map_data = load_map(file_name, map_height, map_width);
+    char **map_data = load_map(file_name, map_height, map_width);
 
-    print_map(map_data, map_height, map_width);
-
-    //printf("map_height : %d - map_width : %d", map_height, map_width);
-
-    return 0;
+    return map_data;
 }
