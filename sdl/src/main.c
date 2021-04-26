@@ -1,35 +1,43 @@
 #include "../include/main.h"
-#include "../include/map.h"
 
-// init sdl window
-int initialize_window(void) {
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        fprintf(stderr, "Error initializing SDL.\n");
-        return false;
+int game_is_running = false;
+SDL_Window* window = NULL;
+SDL_Renderer* renderer = NULL;
+int last_frame_time = 0;
+
+int main() {
+    map map_data = init_map();
+    game_is_running = initialize_window();
+
+    setup();
+
+    while (game_is_running) {
+        process_input();
+        update();
+        render(map_data);
     }
 
-    window = SDL_CreateWindow(
-            NULL,
-            SDL_WINDOWPOS_CENTERED,
-            SDL_WINDOWPOS_CENTERED,
-            WINDOW_WIDTH,
-            WINDOW_HEIGHT,
-            0
-    );
+    destroy_window();
 
-    if (!window) {
-        fprintf(stderr, "Error creating SDL Window.\n");
-        return false;
-    }
+    return 0;
+}
 
-    renderer = SDL_CreateRenderer(window, -1, 0);
+// setup our game
+void setup(void) {
+    // init the ball object moving down at a constant velocity
+    player.x = 64;
+    player.y = 64;
+    player.width = 64;
+    player.height = 64;
+    player.sprite = SDL_CreateTextureFromSurface(renderer, IMG_Load("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/player.png"));
 
-    if (!renderer) {
-        fprintf(stderr, "Error creating SDL Renderer.\n");
-        return false;
-    }
+    texture.ground = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/ground.bmp"));
+    texture.wall = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/wall.bmp"));
+    texture.bomb = SDL_CreateTextureFromSurface(renderer, IMG_Load("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/bomb.png"));
 
-    return true;
+    map_bomb.map_height = MAP_HEIGHT;
+    map_bomb.map_width = MAP_WIDTH;
+    map_bomb.data = load_map_bomb(MAP_HEIGHT, MAP_WIDTH);
 }
 
 // input processing
@@ -45,28 +53,20 @@ void process_input(void) {
             if (event.key.keysym.sym == SDLK_ESCAPE)
                 game_is_running = false;
             if (event.key.keysym.sym == SDLK_LEFT)
-                player.x -= 64;
+                player.x -= TILE_WIDTH;
             if (event.key.keysym.sym == SDLK_RIGHT)
-                player.x += 64;
+                player.x += TILE_WIDTH;
             if (event.key.keysym.sym == SDLK_UP)
-                player.y -= 64;
+                player.y -= TILE_HEIGHT;
             if (event.key.keysym.sym == SDLK_DOWN)
-                player.y += 64;
+                player.y += TILE_HEIGHT;
+            if (event.key.keysym.sym == SDLK_f) {
+                int bomb_position_x = player.x / TILE_HEIGHT;
+                int bomb_position_y = player.y / TILE_WIDTH;
+                map_bomb.data[bomb_position_x][bomb_position_y] = 'X';
+            }
             break;
     }
-}
-
-// setup our game
-void setup(void) {
-    // init the ball object moving down at a constant velocity
-    player.x = 64;
-    player.y = 64;
-    player.width = 64;
-    player.height = 64;
-    player.sprite = SDL_CreateTextureFromSurface(renderer, IMG_Load("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/player.png"));
-
-    texture.ground = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/ground.bmp"));
-    texture.wall = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/wall.bmp"));
 }
 
 // update
@@ -107,10 +107,22 @@ void render(map map_data) {
             SDL_Rect src = {0, 0, TILE_HEIGHT, TILE_WIDTH};
             SDL_Rect dst = {height * TILE_HEIGHT, width * TILE_WIDTH, TILE_HEIGHT, TILE_WIDTH};
 
-            if(map_data.data[i][j] == wall) {
+            if(map_data.data[i][j] == wall_type) {
                 SDL_RenderCopy(renderer, texture.wall, &src, &dst);
-            } else if (map_data.data[i][j] == ground) {
+            } else if (map_data.data[i][j] == ground_type) {
                 SDL_RenderCopy(renderer, texture.ground, &src, &dst);
+            }
+        }
+    }
+
+    // drawing bombs on map
+    for(int height = 0, i = 0; height < map_bomb.map_height; height++, i++) {
+        for(int width = 0, j = 0; width < map_bomb.map_width; width++, j++) {
+            SDL_Rect src = {0, 0, TILE_HEIGHT, TILE_WIDTH};
+            SDL_Rect dst = {height * TILE_HEIGHT, width * TILE_WIDTH, TILE_HEIGHT, TILE_WIDTH};
+
+            if(map_bomb.data[i][j] == bomb_type) {
+                SDL_RenderCopy(renderer, texture.bomb, &src, &dst);
             }
         }
     }
@@ -124,14 +136,43 @@ void render(map map_data) {
     SDL_RenderPresent(renderer);
 }
 
-/*texture init_texture()
-{
-    texture map_texture = {
-            SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("/home/debian/Documents/Projects/bomberman_c/sdl/sprite/ground.bmp"))
-    };
+// init sdl window
+int initialize_window(void) {
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        fprintf(stderr, "Error initializing SDL.\n");
+        return false;
+    }
 
-    return map_texture;
-}*/
+    window = SDL_CreateWindow(
+            NULL,
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            WINDOW_WIDTH,
+            WINDOW_HEIGHT,
+            0
+    );
+
+    if (!window) {
+        fprintf(stderr, "Error creating SDL Window.\n");
+        return false;
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, 0);
+
+    if (!renderer) {
+        fprintf(stderr, "Error creating SDL Renderer.\n");
+        return false;
+    }
+
+    return true;
+}
+
+// destroy window and renderer
+void destroy_window(void) {
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
 
 map init_map()
 {
@@ -145,28 +186,3 @@ map init_map()
 
     return map_data;
 }
-
-// destroy window and renderer
-void destroy_window(void) {
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-}
-
-int main() {
-    map map_data = init_map();
-    game_is_running = initialize_window();
-
-    setup();
-
-    while (game_is_running) {
-        process_input();
-        update();
-        render(map_data);
-    }
-
-    destroy_window();
-
-    return 0;
-}
-

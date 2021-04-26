@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "../include/map.h"
 
 void print_map(char** map, int height, int width)
@@ -9,6 +7,31 @@ void print_map(char** map, int height, int width)
             printf("%c", map[i][j]);
         }
     }
+}
+
+int size_map(char *file_name, int *map_height, int *map_width)
+{
+    int max_width, width, height = 0;
+
+    FILE *F;
+
+    F = fopen(file_name, "r");
+
+    if(!F)
+        return -1;
+
+    for(char c = fgetc(F); c != EOF; c = fgetc(F), height++) {
+        for(; c != EOF && c != '\n'; c = fgetc(F), width++);
+        if (width >= max_width) {
+            max_width = width;
+        }
+        width = 0;
+    }
+
+    *map_height = height;
+    *map_width = max_width;
+
+    return 0;
 }
 
 char** load_map(char *file_name, int height, int width)
@@ -38,29 +61,20 @@ char** load_map(char *file_name, int height, int width)
     return map_data;
 }
 
-int size_map(char *file_name, int *map_height, int *map_width)
+char** load_map_bomb(int height, int width)
 {
-    int max_width, width, height = 0;
+    char **map_bomb_data = malloc(height * sizeof(char *));
 
-    FILE *F;
-
-    F = fopen(file_name, "r");
-
-    if(!F)
-        return -1;
-
-    for(char c = fgetc(F); c != EOF; c = fgetc(F), height++) {
-        for(; c != EOF && c != '\n'; c = fgetc(F), width++);
-        if (width >= max_width) {
-            max_width = width;
-        }
-        width = 0;
+    for (int h = 0; h < height; h++) {
+        map_bomb_data[h] = malloc(width * sizeof(char));
     }
 
-    *map_height = height;
-    *map_width = max_width;
+    return map_bomb_data;
+}
 
-    return 0;
+
+void spawn_bomb(char** map_bomb_data, int position_x, int position_y) {
+    map_bomb_data[position_x][position_y] = 'X';
 }
 
 char** map_syntax(char *file_name)
